@@ -1,7 +1,6 @@
 // server.js
 const express = require('express');
 const bodyParser = require('body-parser');
-// const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
 const wikiRouter = require('./routes/wiki');
