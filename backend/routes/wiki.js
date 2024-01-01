@@ -1,16 +1,20 @@
 // routes/wiki.js
 const express = require('express');
 const router = express.Router();
-const { getFirstLink, calculatePath } = require('../services/wikipediaService');
+const { calculatePath } = require('../services/wikipediaService');
 
-router.post('/calculatePath', async (req, res) => {
-  const { url } = req.body;
-  try {
-    const results = await calculatePath(url);
-    res.json(results);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+module.exports = function(io){
+  
+  router.post('/calculatePath', async (req, res) => {
+    const { url } = req.body;
+    try {
+      // Pass io instance to calculatePath function
+      const results = await calculatePath(url, io);
+      res.json(results);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 
-module.exports = router;
+  return router;
+}

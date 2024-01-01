@@ -1,9 +1,10 @@
+
 // services/wikipediaService.js
 const axios = require('axios');
 const jsdom = require("jsdom");
 const cheerio = require('cheerio');
 const { JSDOM } = jsdom;
-
+const fs = require('fs');
 
 async function getArticleContent(url) {
   try {
@@ -56,27 +57,50 @@ function getFirstLink(articleContent) {
 }
 
 
-async function calculatePath(startUrl) {
+async function calculatePath(startUrl, io) {
   console.log("Calculating path to Philosophy...");
+  io.emit('log', "Calculating path to Philosophy...");
   let currentUrl = startUrl;
   let clicks = 0;
   let visitedArticles = [];
+  let visitedPages = [];
+  let existingData = [];
+
+  fs.readFile('visitedArticles.json', 'utf8', (err, data) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    if (data) {
+      existingData = JSON.parse(data);
+    }
+  });
 
   while (currentUrl !== "https://en.wikipedia.org/wiki/Philosophy") {
     clicks++;
-    visitedArticles.push(currentUrl);
-
+    
     const articleContent = await getArticleContent(currentUrl);
     const nextLink = getFirstLink(articleContent);
-
-    if (!nextLink || visitedArticles.includes(nextLink)) {
+    existingData.push({ url: currentUrl , parent: `https://en.wikipedia.org${nextLink}` });
+    visitedPages.push(`https://en.wikipedia.org${nextLink}`);
+    if (!nextLink || visitedArticles.some(article => article.url === nextLink)) {
       return { clicks, articles: visitedArticles, reachedPhilosophy: false };
     }
 
     currentUrl = `https://en.wikipedia.org${nextLink}`;
   }
 
-  return { steps: clicks, visitedPages: visitedArticles, reachedPhilosophy: true };
+  const updatedJsonData = JSON.stringify(existingData, null, 2);
+
+  fs.writeFile('visitedArticles.json', updatedJsonData, (err) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    console.log("Data has been added to the existing file");
+  });
+
+  return { steps: clicks, visitedPages: visitedPages, reachedPhilosophy: true };
 }
 
 module.exports = { calculatePath };
