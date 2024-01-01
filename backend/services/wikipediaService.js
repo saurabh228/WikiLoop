@@ -1,22 +1,28 @@
 // services/wikipediaService.js
 const axios = require('axios');
-const jsdom = require("jsdom");
 const cheerio = require('cheerio');
-const { JSDOM } = jsdom;
 const fs = require('fs');
 
+/**
+ * Fetches the HTML content of a Wikipedia article.
+ * @param {string} url - The URL of the Wikipedia article.
+ * @returns {string|null} - The HTML content of the article or null on error.
+ */
 async function getArticleContent(url) {
   try {
     const response = await axios.get(url);
-    const data = response.data;
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Error fetching article content:", error);
     return null;
   }
 }
 
-// Function to remove content within parentheses from text within paragraph tags
+/**
+ * Removes content within parentheses from text within paragraph tags.
+ * @param {string} html - The HTML content to process.
+ * @returns {string} - The HTML content with parentheses content removed.
+ */
 function removeParenthesesContentWithinParagraphs(html) {
   const $ = cheerio.load(html);
 
@@ -27,22 +33,22 @@ function removeParenthesesContentWithinParagraphs(html) {
       $(paragraph).html(contentWithoutParentheses);
     }
   });
-  
 
   return $.html();
 }
 
+/**
+ * Extracts the first eligible link from the article content.
+ * @param {string} articleContent - The HTML content of the Wikipedia article.
+ * @returns {string|null} - The URL of the first eligible link or null if none found.
+ */
 function getFirstLink(articleContent) {
-  // Remove content within parentheses from paragraph text
   const contentWithoutParentheses = removeParenthesesContentWithinParagraphs(articleContent);
-
-  // Parse the HTML content using a DOM parser
   const $ = cheerio.load(contentWithoutParentheses);
 
   // Find all non-parenthetical, non-italicized links within the main content area
   const eligibleLinks = $('p > a')
     .filter((_, link) => {
-      // Exclude links within italics
       const parent = $(link).parent();
       return !(
         parent.is('i') ||
@@ -52,48 +58,45 @@ function getFirstLink(articleContent) {
     });
 
   const newlink = eligibleLinks.length > 0 ? eligibleLinks.attr('href') : null;
-
-  // Return the first eligible link, or null if none are found
   console.log("Found", eligibleLinks.length > 0 ? newlink : "No Valid Links");
   return newlink;
 }
 
-
+/**
+ * Calculates the path to the Philosophy article on Wikipedia.
+ * @param {string} startUrl - The starting URL for the calculation.
+ * @param {object} io - The Socket.IO instance for emitting events.
+ */
 async function calculatePath(startUrl, io) {
   console.log("Calculating path to Philosophy...");
   io.emit('log', "Calculating path to Philosophy...");
+
   let currentUrl = startUrl;
   let clicks = 0;
-  let visitedArticles = [];
-  let visitedPages = [];
   let existingData = [];
 
-  fs.readFile('visitedArticles.json', 'utf8', (err, data) => {
+  // Clear the contents of the 'visitedArticles.json' file
+  fs.writeFile('visitedArticles.json', "", (err) => {
     if (err) {
       console.error(err);
       return;
-    }
-    if (data) {
-      existingData = JSON.parse(data);
     }
   });
 
   while (currentUrl !== "https://en.wikipedia.org/wiki/Philosophy") {
     clicks++;
-    
+
     const articleContent = await getArticleContent(currentUrl);
     const nextLink = `https://en.wikipedia.org${getFirstLink(articleContent)}`;
-    existingData.push({ url: currentUrl , parent: nextLink });
+    existingData.push({ url: currentUrl, parent: nextLink });
 
-    
-    if(!nextLink) {
-      io.emit('dead-page', currentUrl)
-      return ;
-    }
-    else if(existingData.some((item) => item.url === nextLink)) {
+    if (!nextLink) {
+      io.emit('dead-page', currentUrl);
+      return;
+    } else if (existingData.some((item) => item.url === nextLink)) {
       io.emit('loop', nextLink);
       return;
-    }else{
+    } else {
       io.emit('next-link', nextLink);
     }
 
@@ -102,6 +105,7 @@ async function calculatePath(startUrl, io) {
 
   const updatedJsonData = JSON.stringify(existingData, null, 2);
 
+  // Write the updated data to the 'visitedArticles.json' file
   fs.writeFile('visitedArticles.json', updatedJsonData, (err) => {
     if (err) {
       console.error(err);
@@ -109,8 +113,6 @@ async function calculatePath(startUrl, io) {
     }
     console.log("Data has been added to the existing file");
   });
-
-  return;
 }
 
 module.exports = { calculatePath };
