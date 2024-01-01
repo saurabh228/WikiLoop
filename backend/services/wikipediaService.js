@@ -1,4 +1,3 @@
-
 // services/wikipediaService.js
 const axios = require('axios');
 const jsdom = require("jsdom");
@@ -21,13 +20,14 @@ async function getArticleContent(url) {
 function removeParenthesesContentWithinParagraphs(html) {
   const $ = cheerio.load(html);
 
-  $('p').each((_, paragraph) => {
+  $('p:not(:has(a))').each((_, paragraph) => {
     const content = $(paragraph).html();
     if (content) {
       const contentWithoutParentheses = content.replace(/\([^)]*\)/g, '');
       $(paragraph).html(contentWithoutParentheses);
     }
   });
+  
 
   return $.html();
 }
@@ -51,9 +51,11 @@ function getFirstLink(articleContent) {
       );
     });
 
+  const newlink = eligibleLinks.length > 0 ? eligibleLinks.attr('href') : null;
+
   // Return the first eligible link, or null if none are found
-  console.log("Found", eligibleLinks.length > 0 ? eligibleLinks.attr('href') : "No Valid Links");
-  return eligibleLinks.length > 0 ? eligibleLinks.attr('href') : null;
+  console.log("Found", eligibleLinks.length > 0 ? newlink : "No Valid Links");
+  return newlink;
 }
 
 
@@ -80,14 +82,22 @@ async function calculatePath(startUrl, io) {
     clicks++;
     
     const articleContent = await getArticleContent(currentUrl);
-    const nextLink = getFirstLink(articleContent);
-    existingData.push({ url: currentUrl , parent: `https://en.wikipedia.org${nextLink}` });
-    visitedPages.push(`https://en.wikipedia.org${nextLink}`);
-    if (!nextLink || visitedArticles.some(article => article.url === nextLink)) {
-      return { clicks, articles: visitedArticles, reachedPhilosophy: false };
+    const nextLink = `https://en.wikipedia.org${getFirstLink(articleContent)}`;
+    existingData.push({ url: currentUrl , parent: nextLink });
+
+    
+    if(!nextLink) {
+      io.emit('dead-page', currentUrl)
+      return ;
+    }
+    else if(existingData.some((item) => item.url === nextLink)) {
+      io.emit('loop', nextLink);
+      return;
+    }else{
+      io.emit('next-link', nextLink);
     }
 
-    currentUrl = `https://en.wikipedia.org${nextLink}`;
+    currentUrl = nextLink;
   }
 
   const updatedJsonData = JSON.stringify(existingData, null, 2);
@@ -100,7 +110,7 @@ async function calculatePath(startUrl, io) {
     console.log("Data has been added to the existing file");
   });
 
-  return { steps: clicks, visitedPages: visitedPages, reachedPhilosophy: true };
+  return;
 }
 
 module.exports = { calculatePath };

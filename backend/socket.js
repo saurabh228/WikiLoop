@@ -1,5 +1,6 @@
 // socket.js
 const { Server } = require('socket.io');
+const fs = require('fs');
 
 function setupSocket(server) {
     const io = new Server(server, {
@@ -11,6 +12,15 @@ function setupSocket(server) {
 
   io.on('connection', (socket) => {
     console.log('A user connected');
+
+    fs.writeFile('visitedArticles.json', "", (err) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      console.log("Data has been cleared");
+    });
+
 
     socket.on('disconnect', () => {
       console.log('User disconnected');

@@ -8,39 +8,32 @@ const socket = io('http://localhost:3001');
 
 function App() {
   const [url, setUrl] = useState('');
-  const [results, setResults] = useState(null);
+  const [results, setResults] = useState([]);
   const [jsonArray, setJsonArray] = useState([]);
 
   useEffect(() => {
     // Listen for updates to the JSON array
-    socket.on('jsonArrayUpdate', (updatedJsonArray) => {
-      setJsonArray(updatedJsonArray);
-      console.log('Updated JSON array:', updatedJsonArray);
+    socket.on('next-link', (nextLink) => {
+      setJsonArray((prevArray) => [...prevArray, nextLink]);
+      console.log("next-link", nextLink);
     });
 
     socket.on('log', (message) => {
       console.log(message);
     });
 
+    // Clean up the event listener when the component unmounts
+    return () => {
+      socket.off('next-link');
+    };
    
   }, []);
 
-  useEffect(() => {
-    // Fetch visited pages from the server
-    axios.get('http://localhost:3001/visited-pages')
-      .then(response => {
-        // console.log('Visited pages:', response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching visited pages:', error.message);
-      });
-  }, [results]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:3001/wiki/calculatePath', { url });
-      setResults(response.data);
     } catch (error) {
       console.error('Error calculating path:', error.message);
     }
@@ -56,14 +49,23 @@ function App() {
         <button type="submit">Calculate Path</button>
       </form>
 
-      {results && results.visitedPages && (
-        <div className="results-container">
-          <p>Number of Requests: {results.steps}</p>
+      <div>
+        <h3>Steps : { jsonArray.length }</h3>
+        <ul>
+          {jsonArray.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      </div>
+
+    
+        {/* <div className="results-container">
+          <p>Number of Requests: {jsonArray.length}</p>
           <div>
             <h3>Visited Pages:</h3>
             <ul>
-              {results.visitedPages.map((page, index) => (
-                <li key={index}>{page}</li>
+              {jsonArray.map((item) => (
+            <li key={item}>{item}</li>
               ))}
             </ul>
           </div>
@@ -75,8 +77,8 @@ function App() {
           ))}
         </ul>
       </div>
-        </div>
-      )}
+        </div> */}
+      
     </div>
   );
 }
