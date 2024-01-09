@@ -3,11 +3,8 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 
-/**
- * Fetches the HTML content of a Wikipedia article.
- * @param {string} url - The URL of the Wikipedia article.
- * @returns {string|null} - The HTML content of the article or null on error.
- */
+
+// Fetches the HTML content of a Wikipedia article.
 async function getArticleContent(url) {
   try {
     const response = await axios.get(url);
@@ -18,42 +15,38 @@ async function getArticleContent(url) {
   }
 }
 
-/**
- * Removes content within parentheses from text within paragraph tags.
- * @param {string} html - The HTML content to process.
- * @returns {string} - The HTML content with parentheses content removed.
- */
+// Removes content within parentheses from text within paragraph tags.
+
 function removeParenthesesContentWithinParagraphs(html) {
   const $ = cheerio.load(html);
 
-  $('p:not(:has(a))').each((_, paragraph) => {
+  $('p').each((_, paragraph) => {
     const content = $(paragraph).html();
     if (content) {
-      const contentWithoutParentheses = content.replace(/\([^)]*\)/g, '');
-      $(paragraph).html(contentWithoutParentheses);
+      const contentWithoutATagContent = content.replace(/\([^)]*\)/g, (match) => {
+        return match.replace(/<a\b[^>]*>.*?<\/a>/gi, '');
+      });
+      $(paragraph).html(contentWithoutATagContent);
     }
   });
 
   return $.html();
 }
 
-/**
- * Extracts the first eligible link from the article content.
- * @param {string} articleContent - The HTML content of the Wikipedia article.
- * @returns {string|null} - The URL of the first eligible link or null if none found.
- */
+
+// Extracts the first eligible link from the article content.
+
 function getFirstLink(articleContent) {
   const contentWithoutParentheses = removeParenthesesContentWithinParagraphs(articleContent);
   const $ = cheerio.load(contentWithoutParentheses);
 
   // Find all non-parenthetical, non-italicized links within the main content area
-  const eligibleLinks = $('p > a')
+  const eligibleLinks = $('p > a, p > b > a')
     .filter((_, link) => {
       const parent = $(link).parent();
       return !(
-        parent.is('i') ||
-        parent.is('b') ||
-        parent.is('em')
+        parent.is('i') || parent.is('em') ||
+        parent.css('font-style') === 'italic'
       );
     });
 
@@ -62,41 +55,50 @@ function getFirstLink(articleContent) {
   return newlink;
 }
 
-/**
- * Calculates the path to the Philosophy article on Wikipedia.
- * @param {string} startUrl - The starting URL for the calculation.
- * @param {object} io - The Socket.IO instance for emitting events.
- */
+
+// Calculates the path to the Philosophy article on Wikipedia.
+
 async function calculatePath(startUrl, io) {
   console.log("Calculating path to Philosophy...");
-  io.emit('log', "Calculating path to Philosophy...");
 
   let currentUrl = startUrl;
   let clicks = 0;
   let existingData = [];
 
-  // Clear the contents of the 'visitedArticles.json' file
-  fs.writeFile('visitedArticles.json', "", (err) => {
-    if (err) {
-      console.error(err);
-      return;
+  try {
+    const data = await fs.promises.readFile('visitedArticles.json', 'utf8');
+    if (data.length > 0) {
+      existingData = JSON.parse(data);
     }
-  });
+  } catch (err) {
+    console.error(err);
+    return;
+  }
+
+  console.log("Existing Data", existingData);
+
+  // Clear the contents of the 'visitedArticles.json' file
+  try {
+    await fs.promises.writeFile('visitedArticles.json', "");
+  } catch (err) {
+    console.error(err);
+    return;
+  }
 
   while (currentUrl !== "https://en.wikipedia.org/wiki/Philosophy") {
     clicks++;
 
     const articleContent = await getArticleContent(currentUrl);
     const nextLink = `https://en.wikipedia.org${getFirstLink(articleContent)}`;
-    existingData.push({ url: currentUrl, parent: nextLink });
 
     if (!nextLink) {
       io.emit('dead-page', currentUrl);
       return;
-    } else if (existingData.some((item) => item.url === nextLink)) {
+    } else if (existingData.includes(nextLink)) {
       io.emit('loop', nextLink);
       return;
     } else {
+      existingData.push(nextLink);
       io.emit('next-link', nextLink);
     }
 
@@ -106,13 +108,12 @@ async function calculatePath(startUrl, io) {
   const updatedJsonData = JSON.stringify(existingData, null, 2);
 
   // Write the updated data to the 'visitedArticles.json' file
-  fs.writeFile('visitedArticles.json', updatedJsonData, (err) => {
-    if (err) {
-      console.error(err);
-      return;
-    }
+  try {
+    await fs.promises.writeFile('visitedArticles.json', updatedJsonData);
     console.log("Data has been added to the existing file");
-  });
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 module.exports = { calculatePath };

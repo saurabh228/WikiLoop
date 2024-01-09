@@ -1,94 +1,13 @@
 [
-  {
-    "url": "https://en.wikipedia.org/wiki/Clay_tablet",
-    "parent": "https://en.wikipedia.org/wiki/Ancient_Near_East"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Ancient_Near_East",
-    "parent": "https://en.wikipedia.org/wiki/Mesopotamia"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Mesopotamia",
-    "parent": "https://en.wikipedia.org/wiki/Historical_region"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Historical_region",
-    "parent": "https://en.wikipedia.org/wiki/Geographical_region"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Geographical_region",
-    "parent": "https://en.wikipedia.org/wiki/Geography"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Geography",
-    "parent": "https://en.wikipedia.org/wiki/Ancient_Greek"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Ancient_Greek",
-    "parent": "https://en.wikipedia.org/wiki/Greek_language"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Greek_language",
-    "parent": "https://en.wikipedia.org/wiki/Modern_Greek"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Modern_Greek",
-    "parent": "https://en.wikipedia.org/wiki/Endonym"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Endonym",
-    "parent": "https://en.wikipedia.org/wiki/Name"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Name",
-    "parent": "https://en.wikipedia.org/wiki/Referent"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Referent",
-    "parent": "https://en.wikipedia.org/wiki/Help:Pronunciation_respelling_key"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Help:Pronunciation_respelling_key",
-    "parent": "https://en.wikipedia.org/wiki/Pronunciation_respelling_for_English"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Pronunciation_respelling_for_English",
-    "parent": "https://en.wikipedia.org/wiki/Pronunciation_respelling"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Pronunciation_respelling",
-    "parent": "https://en.wikipedia.org/wiki/Nonce_word"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Nonce_word",
-    "parent": "https://en.wikipedia.org/wiki/Linguistics"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Linguistics",
-    "parent": "https://en.wikipedia.org/wiki/Language"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Language",
-    "parent": "https://en.wikipedia.org/wiki/Communication"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Communication",
-    "parent": "https://en.wikipedia.org/wiki/Information"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Information",
-    "parent": "https://en.wikipedia.org/wiki/Abstraction"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Abstraction",
-    "parent": "https://en.wikipedia.org/wiki/Rule_of_inference"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Rule_of_inference",
-    "parent": "https://en.wikipedia.org/wiki/Philosophy_of_logic"
-  },
-  {
-    "url": "https://en.wikipedia.org/wiki/Philosophy_of_logic",
-    "parent": "https://en.wikipedia.org/wiki/Philosophy"
-  }
+  "https://en.wikipedia.org/wiki/Biological_interaction",
+  "https://en.wikipedia.org/wiki/Ecology",
+  "https://en.wikipedia.org/wiki/Organism",
+  "https://en.wikipedia.org/wiki/Biology",
+  "https://en.wikipedia.org/wiki/Science",
+  "https://en.wikipedia.org/wiki/Scientific_method",
+  "https://en.wikipedia.org/wiki/Empirical_evidence",
+  "https://en.wikipedia.org/wiki/Proposition",
+  "https://en.wikipedia.org/wiki/Philosophy_of_language",
+  "https://en.wikipedia.org/wiki/Analytic_philosophy",
+  "https://en.wikipedia.org/wiki/Philosophy"
 ]
